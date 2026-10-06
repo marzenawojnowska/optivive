@@ -1,36 +1,80 @@
-# This is a basic workflow to help you get started with Actions
+name: Daily Encrypted Database Backup
 
-name: CI
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
-  # Allows you to run this workflow manually from the Actions tab
+  schedule:
+    - cron: '0 2 * * *'
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+permissions:
+  contents: read
+
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  backup:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
+      - name: Prepare backup directory
+        run: mkdir -p backup
 
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      - name: Validate required secrets
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DB_ENCRYPTION_KEY: ${{ secrets.DB_ENCRYPTION_KEY }}
         run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          test -n "$DATABASE_URL" || { echo "DATABASE_URL is missing"; exit 1; }
+          test -n "$DB_ENCRYPTION_KEY" || { echo "DB_ENCRYPTION_KEY is missing"; exit 1; }
+          echo "Backup environment validated."
+
+      - name: Create manifest
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          cat > backup/manifest.json <<EOF
+          {
+            "generated_at_utc": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')",
+            "workflow": "Daily Encrypted Database Backup",
+            "repository": "${{ github.repository }}",
+            "commit_sha": "${COMMIT_SHA}",
+            "backup_type": "encrypted_database",
+            "schema_version": "1.0"
+          }
+          EOF
+
+      - name: Create encrypted database backup
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DB_ENCRYPTION_KEY: ${{ secrets.DB_ENCRYPTION_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Use the project's existing DB dump command or adapter here.
+          # Do not print secret values or the database URL.
+          #
+          # Example pattern:
+          #   pg_dump "$DATABASE_URL" > backup/database.sql
+          #   openssl enc -aes-256-cbc -salt -pbkdf2 -pass pass:"$DB_ENCRYPTION_KEY" -in backup/database.sql -out backup/database.sql.enc
+          #
+          # Replace this placeholder with the actual project database backup command.
+          printf '%s\n' "backup created at $(date -u +'%Y-%m-%dT%H:%M:%SZ')" > backup/database.sql
+          openssl enc -aes-256-cbc -salt -pbkdf2 -pass pass:"$DB_ENCRYPTION_KEY" -in backup/database.sql -out backup/database.sql.enc
+
+      - name: Verify artifact inputs
+        run: |
+          test -f backup/manifest.json
+          test -f backup/database.sql.enc
+          ls -l backup
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-backup-${{ github.run_id }}
+          path: |
+            backup/manifest.json
+            backup/database.sql.enc
+          if-no-files-found: error
+          retention-days: 30
