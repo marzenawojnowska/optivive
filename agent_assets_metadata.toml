@@ -1,0 +1,114 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "_surhKFtvMqVQArWRmmCn"
+uri = "file://artifacts/autoamer-seo-studio/docs/Optivive_SDD.docx"
+type = "word_document"
+title = "Optivive.app — Software Design Document"
+description = "Edytowalny dokument Word SDD opisujący aktualną architekturę, moduły, API, model danych, bezpieczeństwo, wdrożenie i testy projektu Optivive.app."
+logical_id = "0f6aca4f-cccb-41c8-8d41-4b8958b8d95c"
+content_hash = "sha256:14d26f09e7b8742775aa3d983a8061b88ec7b85619a14fbde361c3c88540a6f4"
+size = 52383
+mtime_ms = 1789821376552
+storage_uri = "gcs://replit-rams-assets-kira/rams/assets/repl:836310a7-52ae-4992-9aa8-bdf12458bce7/0f6aca4f-cccb-41c8-8d41-4b8958b8d95c/e8625a03-53d0-471b-b12a-4bdd96624857"
+storage_version_token = "1789821436658921"
+content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
+[[outputs]]
+id = "b_LTjB_NIoxe3qoIcUP46"
+uri = "file://reports/raport-retry-idempotency-provider-recovery.docx"
+type = "word_document"
+title = "Raport Optivive.app — retry, idempotencja i provider recovery"
+description = "Raport po polsku: wykonane, częściowo wykonane, odroczone i niewykonane elementy wraz z przyczynami, testami, ryzykami i rekomendacjami."
+logical_id = "6dd6a688-79c1-421f-bf54-e01af2604256"
+content_hash = "sha256:91b88895fdeabb6efe6a4d5bab7cee378765390a8c1ae73378bd5b778a06b0f4"
+size = 43801
+mtime_ms = 1789979297983
+storage_uri = "gcs://replit-rams-assets-kira/rams/assets/repl:836310a7-52ae-4992-9aa8-bdf12458bce7/6dd6a688-79c1-421f-bf54-e01af2604256/b949d708-078c-47ae-bd9f-9252b01cdfa9"
+storage_version_token = "1789979304669379"
+content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
+[[outputs]]
+id = "1KK6yw08qwqmf3YRHHFH3"
+uri = "file://reports/raport-macierz-zadan-prompty-1-8.docx"
+type = "word_document"
+title = "Raport — macierz zadań i status promptów 1–8"
+description = "Dokument Word ze stanem implementacji promptów 1–8."
+logical_id = "e29a58f9-59c7-47e8-a452-951c00e4dc36"
+content_hash = "sha256:cc8a20751e6066c19dd1119aafb29746bb46debd57f382eb04153ba45fc78057"
+size = 55901
+mtime_ms = 1789979841999
+storage_uri = "gcs://replit-rams-assets-kira/rams/assets/repl:836310a7-52ae-4992-9aa8-bdf12458bce7/e29a58f9-59c7-47e8-a452-951c00e4dc36/1f7cde9e-4be1-420a-b0db-f352d82b6b27"
+storage_version_token = "1790000198706899"
+content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
+[[outputs]]
+id = "IbWyulP5k4K0pWoGCQIWd"
+uri = "file://optivive-project-latest.zip"
+type = "unspecified"
+title = "Optivive — najnowszy projekt"
+description = "Archiwum źródłowe bieżącego projektu z kodem, assetami, dokumentacją, workflow CI/CD i lockfile. Bez node_modules, buildów, cache, backupów i sekretów."
+logical_id = "60952905-4524-4d4c-b63d-fd922bcdd55b"
+content_hash = "sha256:e6db2c4aa91cc9a16bc8ddfcdbbe3f9cc1c7f6192c90b0c4c7f558a76eb35daa"
+size = 13396626
+mtime_ms = 1790156821541
+storage_uri = "gcs://replit-rams-assets-kira/rams/assets/repl:836310a7-52ae-4992-9aa8-bdf12458bce7/60952905-4524-4d4c-b63d-fd922bcdd55b/73f44fc2-35bf-440c-becc-7790f3bbe595"
+storage_version_token = "1790156828012249"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "STYijkJTu2i44ks_bCoAX"
+uri = "file://exports/optivive-project-current.zip"
+type = "unspecified"
+title = "Optivive — aktualne pliki projektu"
+description = "ZIP z aktualnym kodem, konfiguracją, assetami i plikami źródłowymi projektu. Pominięto node_modules, cache, buildy, repozytorium Git oraz pliki sekretów."
+logical_id = "6b278023-e9c8-4974-b9da-ad0c9e485a76"
+content_hash = "sha256:8450e1bad12970967bf58eabb39e501a227fe56edbf363b323377f16dc8fb93f"
+size = 14926689
+mtime_ms = 1790173400286
+storage_uri = "gcs://replit-rams-assets-kira/rams/assets/repl:836310a7-52ae-4992-9aa8-bdf12458bce7/6b278023-e9c8-4974-b9da-ad0c9e485a76/d609ed46-00dd-458a-871d-611ae66b1ff3"
+storage_version_token = "1790173410217804"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "D77yZ0A9ELTNPOum5XO4h"
+uri = "file://reports/raport-opisowy-projektu-optivive.docx"
+type = "word_document"
+title = "Raport opisowy projektu Optivive.app"
+description = "Raport Word po polsku: opis funkcji i architektury projektu oraz skonfigurowane nazwy plików kopii PostgreSQL, z zaznaczeniem że konkretna kopia/uruchomienie nie zostało potwierdzone."
+logical_id = "95401b2f-55b9-41f0-b01b-39c360220527"
+content_hash = "sha256:be37a5c04785341939246b830d993256b072f9b644deed608759085d625f3f0f"
+size = 43195
+mtime_ms = 1791044705015
+storage_uri = "gcs://replit-rams-assets-kira/rams/assets/repl:836310a7-52ae-4992-9aa8-bdf12458bce7/95401b2f-55b9-41f0-b01b-39c360220527/66292521-c3d6-4efa-a5e0-b9b6c4f412d1"
+storage_version_token = "1791044724366834"
+content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
+[[outputs]]
+id = "Ki_gQRBVyFIKmeYFxtk5w"
+uri = "file://reports/optivive-dataforseo-and-scoring-report.html"
+type = "html"
+title = "Optivive × DataForSEO report"
+description = "Data sources, current Optivive analysis pipeline, score formulas, decision rules, statuses, and the separate GEO article audit."
+logical_id = "cab5b386-e63f-48ec-b238-9bbe0b9b5ab2"
+content_hash = "sha256:592438984c3fad9a75b25d0f5c9f9662219fae21dc3b4c45d36076e2c7e63376"
+size = 35923
+mtime_ms = 1791063690134
+storage_uri = "gcs://replit-rams-assets-kira/rams/assets/repl:836310a7-52ae-4992-9aa8-bdf12458bce7/cab5b386-e63f-48ec-b238-9bbe0b9b5ab2/5b9fd011-558b-44b8-8df8-e33d942383ed"
+storage_version_token = "1791063717259404"
+content_type = "text/html"
+
+[[outputs]]
+id = "-KcxFh2uw7jEfNHPj_L1A"
+uri = "file://reports/optivive-seo-engine-flow-and-scoring.docx"
+type = "word_document"
+title = "Optivive SEO Engine — Architecture, Data Collection & Scoring"
+description = "Current code-based Word report covering the SEO Engine flow, DataForSEO evidence, deterministic scoring, recommendations, known gaps, and verification status."
+logical_id = "51f167ed-0d9a-493d-8ead-7e90077d852f"
+content_hash = "sha256:2784fdcc9ac1cf4f05287827941cc7bf50907bb5491fc37ffd922c839cb784ad"
+size = 46725
+mtime_ms = 1791215314037
+storage_uri = "gcs://replit-rams-assets-kira/rams/assets/repl:836310a7-52ae-4992-9aa8-bdf12458bce7/51f167ed-0d9a-493d-8ead-7e90077d852f/cb181a19-b965-4b9a-8e24-aea7e09be179"
+storage_version_token = "1791215322476025"
+content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
