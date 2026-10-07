@@ -1,0 +1,35 @@
+{
+  "name": "workspace",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {
+    "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
+    "build": "flock -w 900 /tmp/optivive-typecheck.lock sh -c 'pnpm run typecheck:unlocked && pnpm -r --if-present run build'",
+    "lint": "node scripts/lint.mjs",
+    "security": "pnpm audit --audit-level=high",
+    "api-contract-check": "node scripts/api-contract-check.mjs",
+    "check:artifact-asset-prefixes": "node scripts/check-artifact-asset-prefixes.mjs",
+    "typecheck:api:clean-db": "flock -w 900 /tmp/optivive-typecheck.lock node scripts/typecheck-api-clean-db.mjs",
+    "export:replit": "bash scripts/create-replit-transfer.sh",
+    "typecheck:libs": "tsc --build",
+    "typecheck": "flock -w 900 /tmp/optivive-typecheck.lock pnpm run typecheck:unlocked",
+    "typecheck:unlocked": "pnpm run typecheck:libs && pnpm -r --workspace-concurrency=1 --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
+    "test": "pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run test",
+    "backup:create": "pnpm --filter @workspace/scripts run backup:create",
+    "backup:verify": "pnpm --filter @workspace/scripts run backup:verify",
+    "backup:restore-rehearsal": "pnpm --filter @workspace/scripts run backup:restore-rehearsal",
+    "migration:dry-run": "pnpm --filter @workspace/scripts run migration:dry-run",
+    "migration:rollback": "pnpm --filter @workspace/scripts run migration:rollback",
+    "resilience:smoke": "pnpm --filter @workspace/scripts run resilience:smoke"
+  },
+  "private": true,
+  "dependencies": {
+    "@replit/connectors-sdk": "^0.4.1",
+    "stripe": "^22.6.2",
+    "stripe-replit-sync": "^1.0.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.6",
+    "typescript": "~5.9.3"
+  }
+}

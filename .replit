@@ -1,0 +1,139 @@
+modules = ["nodejs-24", "python-base-3.13", "postgresql-16"]
+
+[deployment]
+router = "application"
+deploymentTarget = "autoscale"
+
+[deployment.postBuild]
+args = ["pnpm", "store", "prune"]
+env = { "CI" = "true" }
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "api-server-test"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "api-server-typecheck-clean-db"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "seo-studio-test"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "release-build"
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "seo-studio-e2e"
+
+[[workflows.workflow]]
+name = "api-server-test"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "DATABASE_ENV=test pnpm --filter @workspace/api-server run test"
+
+[workflows.workflow.metadata]
+isValidation = true
+
+[[workflows.workflow]]
+name = "api-server-typecheck-clean-db"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pnpm run typecheck:api:clean-db"
+
+[workflows.workflow.metadata]
+isValidation = true
+
+[[workflows.workflow]]
+name = "seo-studio-test"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pnpm --filter @workspace/seo-studio run test"
+
+[workflows.workflow.metadata]
+isValidation = true
+
+[[workflows.workflow]]
+name = "release-build"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pnpm run build && pnpm run check:artifact-asset-prefixes"
+
+[workflows.workflow.metadata]
+isValidation = true
+
+[agent]
+stack = "PNPM_WORKSPACE"
+expertMode = true
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 120000
+
+[nix]
+channel = "stable-25_05"
+
+
+[userenv]
+
+[userenv.shared]
+EDITOR_EMAIL_ALLOWLIST = ""
+
+[userenv.development]
+GOOGLE_REDIRECT_URI = "https://836310a7-52ae-4992-9aa8-bdf12458bce7-00-3877uacv5ho5o.kira.replit.dev/api/v2/google/oauth/callback"
+BILLING_STRIPE_GROWTH_PRICE_ID = "price_1UID9wB2zVNxxV4I6kKjdONc"
+BILLING_PRO_ARTICLE_EUR_CENTS = "500"
+BILLING_PRO_SEAT_EUR_CENTS = "1000"
+BILLING_PRO_WORKSPACE_EUR_CENTS = "1000"
+BILLING_STRIPE_PRO_ARTICLE_PRICE_ID = "price_1UMBIAB2zVNxxV4I67Bcywno"
+BILLING_STRIPE_PRO_PRICE_ID = "price_1UID9xB2zVNxxV4IQHYc3Vt3"
+BILLING_STRIPE_PRO_SEAT_PRICE_ID = "price_1UIntYB2zVNxxV4IrRS47WLe"
+BILLING_STRIPE_PRO_WORKSPACE_PRICE_ID = "price_1UIntWB2zVNxxV4IrVVCb4xv"
+BILLING_STRIPE_STARTER_PRICE_ID = "price_1UID9vB2zVNxxV4IBTTL851n"
+
+[userenv.production]
+BILLING_STRIPE_STARTER_PRICE_ID = "price_1UIwPKPnkXDyxbGaCnXUJcfx"
+BILLING_STRIPE_GROWTH_PRICE_ID = "price_1UIwPKPnkXDyxbGaTTCOmxRv"
+BILLING_STRIPE_PRO_PRICE_ID = "price_1UIwPKPnkXDyxbGanFAsVjaU"
+BILLING_STRIPE_PRO_WORKSPACE_PRICE_ID = "price_1UIwPJPnkXDyxbGaUZAHCxhV"
+BILLING_STRIPE_PRO_ARTICLE_PRICE_ID = "price_1UNE6XPnkXDyxbGadKT49tIG"
+BILLING_STRIPE_PRO_SEAT_PRICE_ID = "price_1UIwPJPnkXDyxbGa4NUW3OsM"
+
+[objectStorage]
+defaultBucketID = "replit-objstore-949d2640-ca56-4b30-a682-71f4522dc8f6"
+
+[[ports]]
+localPort = 8081
+externalPort = 8081
+
+[[ports]]
+localPort = 18325
+externalPort = 9000
+
+[[workflows.workflow]]
+name = "seo-studio-e2e"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pnpm --filter @workspace/seo-studio run e2e"
+
+[workflows.workflow.metadata]
+isValidation = true
