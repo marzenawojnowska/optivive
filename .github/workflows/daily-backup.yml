@@ -1,0 +1,118 @@
+name: Daily encrypted database backup
+
+on:
+  schedule:
+    - cron: "15 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+      DATABASE_ENV: production
+      BACKUP_REPOSITORY_KIND: aws-s3-independent-account
+      BACKUP_RPO_MINUTES: 1440
+      BACKUP_RTO_MINUTES: 120
+      MEDIA_BYTES_BACKUP_VERIFIED: "false"
+      BACKUP_FILE: /tmp/optivive-database.dump
+      MEDIA_MANIFEST_FILE: /tmp/optivive-database.dump.media.json
+      BACKUP_S3_BUCKET: ${{ vars.BACKUP_S3_BUCKET }}
+      BACKUP_AWS_REGION: ${{ vars.BACKUP_AWS_REGION }}
+      BACKUP_KMS_KEY_ARN: ${{ vars.BACKUP_KMS_KEY_ARN }}
+      BACKUP_ALERT_TOPIC_ARN: ${{ vars.BACKUP_ALERT_TOPIC_ARN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.17.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Authenticate to independent backup account
+        id: aws-auth
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.BACKUP_AWS_ROLE_ARN }}
+          aws-region: ${{ vars.BACKUP_AWS_REGION }}
+      - name: Create database backup and media reference manifest
+        id: create
+        run: pnpm run backup:create
+      - name: Verify backup archive and manifest
+        id: verify
+        run: pnpm run backup:verify -- --file "$BACKUP_FILE" --manifest "$MEDIA_MANIFEST_FILE"
+      - name: Upload, read back, and verify encrypted backup
+        id: archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${BACKUP_S3_BUCKET:?Set the BACKUP_S3_BUCKET repository variable.}"
+          : "${BACKUP_AWS_REGION:?Set the BACKUP_AWS_REGION repository variable.}"
+          : "${BACKUP_KMS_KEY_ARN:?Set the BACKUP_KMS_KEY_ARN repository variable.}"
+          : "${BACKUP_ALERT_TOPIC_ARN:?Set the BACKUP_ALERT_TOPIC_ARN repository variable.}"
+          run_date="$(date -u +%Y/%m/%d)"
+          backup_prefix="backups/${run_date}/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          archive_key="${backup_prefix}/database.dump"
+          manifest_key="${backup_prefix}/manifest.json"
+          marker_key="${backup_prefix}/verified.json"
+
+          aws s3 cp "$BACKUP_FILE" "s3://${BACKUP_S3_BUCKET}/${archive_key}" \
+            --sse aws:kms --sse-kms-key-id "$BACKUP_KMS_KEY_ARN" \
+            --checksum-algorithm SHA256
+          aws s3 cp "$MEDIA_MANIFEST_FILE" "s3://${BACKUP_S3_BUCKET}/${manifest_key}" \
+            --sse aws:kms --sse-kms-key-id "$BACKUP_KMS_KEY_ARN" \
+            --checksum-algorithm SHA256
+
+          aws s3api head-object --bucket "$BACKUP_S3_BUCKET" --key "$archive_key" > /tmp/archive-head.json
+          aws s3api head-object --bucket "$BACKUP_S3_BUCKET" --key "$manifest_key" > /tmp/manifest-head.json
+          jq -e --arg key "$BACKUP_KMS_KEY_ARN" \
+            '.ServerSideEncryption == "aws:kms" and .SSEKMSKeyId == $key and .VersionId != null' \
+            /tmp/archive-head.json >/dev/null
+          jq -e --arg key "$BACKUP_KMS_KEY_ARN" \
+            '.ServerSideEncryption == "aws:kms" and .SSEKMSKeyId == $key and .VersionId != null' \
+            /tmp/manifest-head.json >/dev/null
+
+          aws s3 cp "s3://${BACKUP_S3_BUCKET}/${archive_key}" /tmp/remote-optivive-database.dump
+          aws s3 cp "s3://${BACKUP_S3_BUCKET}/${manifest_key}" /tmp/remote-optivive-database.dump.media.json
+          pnpm run backup:verify -- \
+            --file /tmp/remote-optivive-database.dump \
+            --manifest /tmp/remote-optivive-database.dump.media.json
+
+          jq -n \
+            --arg backupId "$(jq -r '.backupId' "$MEDIA_MANIFEST_FILE")" \
+            --arg archiveSha256 "$(sha256sum /tmp/remote-optivive-database.dump | cut -d ' ' -f 1)" \
+            --arg verifiedAt "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            '{backupId: $backupId, archiveSha256: $archiveSha256, verifiedAt: $verifiedAt}' \
+            > /tmp/verified.json
+          aws s3 cp /tmp/verified.json "s3://${BACKUP_S3_BUCKET}/${marker_key}" \
+            --sse aws:kms --sse-kms-key-id "$BACKUP_KMS_KEY_ARN"
+          aws s3api head-object --bucket "$BACKUP_S3_BUCKET" --key "$marker_key" > /tmp/marker-head.json
+          jq -e --arg key "$BACKUP_KMS_KEY_ARN" \
+            '.ServerSideEncryption == "aws:kms" and .SSEKMSKeyId == $key and .VersionId != null' \
+            /tmp/marker-head.json >/dev/null
+          echo "backup_prefix=${backup_prefix}" >> "$GITHUB_OUTPUT"
+      - name: Alert on backup failure
+        if: ${{ failure() && steps.aws-auth.outcome == 'success' }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          aws sns publish \
+            --topic-arn "$BACKUP_ALERT_TOPIC_ARN" \
+            --subject "Optivive daily backup failed" \
+            --message "The daily production backup failed verification or upload. Inspect GitHub Actions run ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}."
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() && steps.verify.outcome == 'success' }}
+        with:
+          name: optivive-backup-${{ github.run_id }}
+          path: |
+            /tmp/optivive-database.dump
+            /tmp/optivive-database.dump.media.json
+          retention-days: 30
+          if-no-files-found: error
